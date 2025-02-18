@@ -4,6 +4,7 @@ const cors = require('cors')
 const app = express()
 app.use(express.json())
 app.use(cors())
+app.use(express.static('dist'))
 
 const PORT = process.env.PORT || 3001
 
@@ -29,10 +30,6 @@ let persons = [
         "number": "39-23-6423122"
     }
 ]
-
-app.get('/', (req, res) => {
-    res.send('<h1>Phonebook</h1>')
-})
 
 app.get('/info', (req, res) => {
     res.send(`<p>Phonebook has info for ${persons.length} people.</br>${(new Date()).toString()}</p>`)
