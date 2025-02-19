@@ -11,27 +11,55 @@ const PORT = process.env.PORT || 3001
 
 let persons = []
 
+const errorHandler = (error, req, res, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+}
+
 app.get('/info', (req, res) => {
     res.send(`<p>Phonebook has info for ${persons.length} people.</br>${(new Date()).toString()}</p>`)
 })
 
 app.get('/api/persons', (req, res) => {
-    Person.find({}).then(result=>{
+    Person.find({}).then(result => {
         res.json(result)
     })
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
     const id = req.params.id
-    Person.findById(id).then(person =>
-        res.json(person)
-    )
+    Person.findById(id).then(person => {
+        if (person) {
+            res.json(person)
+        }
+        else {
+            res.status(404).end()
+        }
+    }).catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
     const id = req.params.id
-    persons = persons.filter(p => p.id !== id)
-    res.status(204).end()
+    Person.findByIdAndDelete(id).then(result=>{
+        res.status(204).end()
+    }).catch(error => next(error))
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const id = req.params.id
+    const body = req.body
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+    Person.findByIdAndUpdate(id, person, {new:true}).then(result=>{
+        res.json(result)
+    }).catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res) => {
@@ -43,23 +71,17 @@ app.post('/api/persons', (req, res) => {
         })
     }
 
-    const personExist = persons.find(p => p.name === body.name)
-    if (personExist) {
-        return res.status(400).json({
-            error: true,
-            message: 'name must be unique'
-        })
-    }
-
     const person = new Person({
         name: body.name,
         number: body.number
     })
-    
+
     person.save().then(savedPerson => {
         res.json(savedPerson)
     })
 })
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
     console.log(`Listening to PORT: ${PORT}`)

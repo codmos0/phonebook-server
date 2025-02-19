@@ -6,6 +6,9 @@ const mongoose = require('mongoose')
 // This is URL of MongoDB used by mongoose
 const uri = process.env.MONGODB_URL
 mongoose.set('strictQuery',false)
+
+console.log("Connecting to mongoDB server...")
+
 // Here we try to connect with mongoDB with callbacks for success or failure
 mongoose.connect(uri)
         .then(result=> console.log("Connected to mongoDB"))
